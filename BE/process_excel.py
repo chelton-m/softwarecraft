@@ -12,11 +12,16 @@
 # 5. Save data to the database
 
 # Note:
-# 1. Load workbook with data_only=True to get values
+# 1. Xlsx:
+# - Excel has another file type that is also saved with the .xlsx extension 
+# but is not an Excel Workbook. This file is called 'Strict Open XML Spreadsheet' format,
+# and the openpyxl library cannot handle this case.
+# - Load workbook with data_only=True to get values
 
 # 2. Xlrd file, the value date is a float when get cell, so we need to convert it to a date format
 #   if cell.ctype == xlrd.XL_CELL_DATE:
 #       dt = datetime(*xlrd.xldate_as_tuple(value, datemode))
+
 
 
 import io
