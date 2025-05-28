@@ -12,7 +12,11 @@
 # 5. Save data to the database
 
 # Note:
-# 1. Load workbook with data_only=True to get values
+# 1. Xlsx:
+# - Excel has another file type that is also saved with the .xlsx extension 
+# but is not an Excel Workbook. This file is called 'Strict Open XML Spreadsheet' format,
+# and the openpyxl library cannot handle this case.
+# - Load workbook with data_only=True to get values
 
 # 2. Xlrd file, the value date is a float when get cell, so we need to convert it to a date format
 #   if cell.ctype == xlrd.XL_CELL_DATE:
@@ -23,8 +27,14 @@ import io
 import logging
 from datetime import datetime
 
+from django import forms
+from django.db import transaction
+from django.utils.translation import gettext_lazy as _
+
 import xlrd
 from openpyxl import load_workbook
+
+from apps.accounts.models import UserProfile
 
 
 logger = logging.getLogger("django")
@@ -33,8 +43,20 @@ EXCEL_ERROR_VALUES = {'#VALUE!', '#DIV/0!', '#REF!', '#NAME?', '#NULL!', '#NUM!'
 
 
 class QuotationImportForm(forms.Form):
-    excel_file = forms.FileField()
-    sheet_name = forms.ChoiceField()
+    excel_file = forms.FileField(
+        label=_("Excel File"),
+        help_text=_("Upload an Excel file (.xlsx or .xls) containing quotation data"),
+        widget=forms.FileInput(attrs={
+            'class': 'form-control',
+            'accept': '.xlsx,.xls'
+        })
+    )
+    sheet_name = forms.ChoiceField(
+        label=_("Select Sheet"),
+        help_text=_("Choose which sheet to import from"),
+        required=True,
+        widget=forms.Select(attrs={'class': 'form-select', 'id': 'sheet-select'})
+    )
 
     def __init__(self, *args, **kwargs):
         logger.info("=== INITIALIZING QUOTATION IMPORT FORM ===")
@@ -71,7 +93,7 @@ class QuotationImportForm(forms.Form):
 
     def _get_xlsx_sheet_names(self, file_content):
         excel_file = io.BytesIO(file_content)
-        workbook = load_workbook(excel_file, read_only=True, data_only=True)  # Load workbook with data_only=True to get values
+        workbook = load_workbook(excel_file, read_only=True, data_only=True)
         if not workbook.sheetnames:
             raise forms.ValidationError(
                 _("This file appears to be in 'Strict Open XML Spreadsheet' format. "
@@ -92,7 +114,6 @@ class QuotationImportForm(forms.Form):
         For xlrd sheets, cell_ref can be (row, col) tuple.
         For openpyxl sheets, cell_ref can be cell name like 'I1'.
         """
-        logger.info(f"[IMPORT] _get_cell_value called with cell_ref: {cell_ref}")
         if self._is_xlrd_sheet(sheet):
             row, col = cell_ref
             cell = sheet.cell(row, col)
@@ -104,26 +125,15 @@ class QuotationImportForm(forms.Form):
                 dt = datetime(*xlrd.xldate_as_tuple(value, datemode))
                 return dt.strftime('%d/%m/%Y')  # returns '20/05/25'
 
-            # If it's a float and looks like a date serial number
-            if cell.ctype == xlrd.XL_CELL_NUMBER and 30000 < value < 60000:
-                try:
-                    dt = datetime(*xlrd.xldate_as_tuple(value, datemode))
-                    return dt.strftime('%d/%m/%Y')
-                except:
-                    return str(value)
+            if cell.ctype == xlrd.XL_CELL_ERROR:
+                return None
 
-            # If it's a string
             return str(value).strip()
         else:
             cell = sheet[cell_ref]
             value = cell.value if cell else ''
-            logger.info(f"[IMPORT] valuedatetime: {value, isinstance(value, datetime)}")
-
             if isinstance(value, datetime):
-                try:
-                    return value.strftime('%d/%m/%Y')
-                except Exception:
-                    return str(value or '').strip()
+                return value.strftime('%d/%m/%Y')
             return str(value or '').strip()
 
     def validate_template(self, sheet):
@@ -160,9 +170,6 @@ class QuotationImportForm(forms.Form):
             'person_in_charge': person_in_charge
         }})
         try:
-            if not company_display or company_display.strip() == '':
-                raise forms.ValidationError(_("Company name cannot be empty"))
-
             company_display = company_display.strip()
             person_in_charge = person_in_charge.strip() if person_in_charge else "N/A"
 
@@ -260,56 +267,38 @@ class QuotationImportForm(forms.Form):
             logger.error(f"[IMPORT] Error processing Excel file: {e}", extra={'error': str(e), 'file_name': getattr(excel_file, 'name', None)})
             raise forms.ValidationError(_("Error processing Excel file: %s") % str(e))
 
+    def _build_company_display(self, company_name, branch_name):
+        """Helper to construct the company display string."""
+        company_name = str(company_name or "").strip()
+        branch_name = str(branch_name or "").strip()
+
+        if company_name and branch_name:
+            return f"{company_name}\n{branch_name}"
+        return company_name or branch_name
+
     def _process_sheet_data(self, sheet):
         logger.info("[IMPORT] Entered _process_sheet_data")
         try:
             if isinstance(sheet, xlrd.sheet.Sheet):
-                quotation_number = "".join(self._get_cell_value(sheet, (1, c)) for c in [2, 3, 6])
+                quotation_number = "-".join(self._get_cell_value(sheet, (1, c)) for c in [2, 3, 6])
                 person_in_charge = self._get_cell_value(sheet, (6, 1))
                 sales_staff_display = self._get_cell_value(sheet, (11, 17))
                 price_display = self._get_cell_value(sheet, (15, 4))
                 quotation_date_display = self._get_cell_value(sheet, (1, 3))
-
-                company_display = ""
-                company_name = self._get_cell_value(4, 1)
-                branch_name = self._get_cell_value(5, 1)
-                if company_name and branch_name:
-                    company_display = f"{company_name}\n{branch_name}"
-                elif branch_name:
-                    company_display = branch_name
-                elif company_name:
-                    company_display = company_name
-                else:
-                    company_display = "N/A"
-
-                price_cell = sheet.cell(15, 4)
-                if price_cell.ctype == xlrd.XL_CELL_ERROR:
-                    price_display = None
-                else:
-                    price_display = str(price_cell.value).strip()
-                    if price_display in EXCEL_ERROR_VALUES or not price_display:
-                        price_display = None
+                company_name = self._get_cell_value(sheet, (4, 1))
+                branch_name = self._get_cell_value(sheet, (5, 1))
+                company_display = self._build_company_display(company_name, branch_name)
             else:
-                quotation_number = "".join(self._get_cell_value(sheet, cell) for cell in ['C2', 'D2', 'G2'])
+                quotation_number = "-".join(self._get_cell_value(sheet, cell) for cell in ['C2', 'D2', 'G2'])
                 person_in_charge = self._get_cell_value(sheet, 'B7')
                 sales_staff_display = self._get_cell_value(sheet, 'R12')
                 price_display = self._get_cell_value(sheet, 'E16')
                 quotation_date_display = self._get_cell_value(sheet, 'D2')
-
-                company_display = ""
                 company_name = self._get_cell_value(sheet, 'B5')
                 branch_name = self._get_cell_value(sheet, 'B6')
-                if company_name and branch_name:
-                    company_display = f"{company_name}\n{branch_name}"
-                elif branch_name:
-                    company_display = branch_name
-                elif company_name:
-                    company_display = company_name
-                else:
-                    company_display = "N/A"
-
-                if price_display in EXCEL_ERROR_VALUES or not price_display:
-                    price_display = None
+                company_display = self._build_company_display(company_name, branch_name)
+            if price_display in EXCEL_ERROR_VALUES:
+                price_display = None
             logger.info(f"[IMPORT] Sheet data extracted: quotation_number={quotation_number}, company_display={company_display}, person_in_charge={person_in_charge}, sales_staff_display={sales_staff_display}, price_display={price_display}, quotation_date_display={quotation_date_display}")
             with transaction.atomic():
                 company, company_display, person_in_charge = self._get_company(
@@ -322,10 +311,10 @@ class QuotationImportForm(forms.Form):
                 'quotation_number': quotation_number,
                 'company': company,
                 'company_display': company_display or 'N/A',
-                'person_in_charge': person_in_charge or 'N/A',
+                'person_in_charge': person_in_charge,
                 'sales_staff': sales_staff_user,
-                'sales_staff_display': sales_staff_display or 'N/A',
-                'price_display': price_display or 'N/A',
+                'sales_staff_display': sales_staff_display,
+                'price_display': price_display,
                 'quotation_date_display': quotation_date_display or 'N/A',
                 'result': 'Not ordered'
             }
