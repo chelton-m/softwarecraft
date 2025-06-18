@@ -1,4 +1,4 @@
-# **Project: Learning & Refactoring**
+# **Project: CHELTON - Learning & Refactoring**
 *A personal project to explore software architecture, refactoring techniques, and development best practices.*
 
 ## 🚀 Overview
