@@ -1,0 +1,154 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Task Scheduler</title>
+  <link href="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.8/main.min.css" rel="stylesheet" />
+  <style>
+    body {
+      margin: 0;
+      font-family: sans-serif;
+      display: flex;
+      flex-direction: column;
+      height: 100vh;
+    }
+
+    #main {
+      display: flex;
+      flex: 1;
+      overflow: hidden;
+    }
+
+    #form-section {
+      width: 300px;
+      padding: 1rem;
+      border-right: 1px solid #ccc;
+      background: #f9f9f9;
+      box-sizing: border-box;
+    }
+
+    form {
+      display: flex;
+      flex-direction: column;
+      gap: 0.75rem;
+    }
+
+    input, textarea {
+      padding: 0.5rem;
+      border-radius: 4px;
+      border: 1px solid #ccc;
+      font-size: 1rem;
+    }
+
+    textarea {
+      resize: vertical;
+    }
+
+    button {
+      padding: 0.5rem;
+      background: #2c7be5;
+      color: white;
+      border: none;
+      border-radius: 4px;
+      font-size: 1rem;
+      cursor: pointer;
+    }
+
+    #calendar {
+      flex: 1;
+      padding: 1rem;
+      overflow-y: auto;
+    }
+  </style>
+</head>
+<body>
+
+  <div id="main">
+    <div id="form-section">
+      <form id="taskForm">
+        <input type="text" id="title" placeholder="Task Title" required />
+        <input type="date" id="date" required />
+        <input type="time" id="startTime" required />
+        <input type="time" id="endTime" required />
+        <textarea id="notes" rows="2" placeholder="Notes (optional)"></textarea>
+        <button type="submit">Add Task</button>
+      </form>
+    </div>
+
+    <div id="calendar"></div>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.8/index.global.min.js"></script>
+  <script>
+    document.addEventListener('DOMContentLoaded', function () {
+      const calendarEl = document.getElementById('calendar');
+      const calendar = new FullCalendar.Calendar(calendarEl, {
+        initialView: 'timeGridWeek',
+        editable: true,
+        selectable: true,
+        height: '100%',
+        headerToolbar: {
+          left: 'prev,next today',
+          center: 'title',
+          right: 'dayGridMonth,timeGridWeek,timeGridDay'
+        },
+        events: [],
+        eventDrop: function (info) {
+          alert(`Task moved to ${info.event.start.toLocaleString()}`);
+        },
+        eventClick: function(info) {
+          info.jsEvent.preventDefault();
+          alert(`Title: ${info.event.title}\nStart: ${info.event.start.toLocaleString()}\nEnd: ${info.event.end?.toLocaleString() || 'N/A'}`);
+        }
+      });
+      calendar.render();
+
+      const form = document.getElementById('taskForm');
+      const dateInput = document.getElementById('date');
+      const startTimeInput = document.getElementById('startTime');
+      const endTimeInput = document.getElementById('endTime');
+
+      function setDefaultDateTime() {
+        const now = new Date();
+        const rounded = new Date(Math.ceil(now.getTime() / (1000 * 60 * 30)) * (1000 * 60 * 30));
+
+        const pad = (num) => num.toString().padStart(2, '0');
+        const toTimeStr = (d) => `${pad(d.getHours())}:${pad(d.getMinutes())}`;
+
+        const start = new Date(rounded);
+        const end = new Date(start.getTime() + 30 * 60000);
+
+        dateInput.value = start.toISOString().slice(0, 10);
+        startTimeInput.value = toTimeStr(start);
+        endTimeInput.value = toTimeStr(end);
+      }
+
+      setDefaultDateTime();
+
+      form.addEventListener('submit', function (e) {
+        e.preventDefault();
+
+        const title = document.getElementById('title').value;
+        const date = dateInput.value;
+        const startTime = startTimeInput.value;
+        const endTime = endTimeInput.value;
+        const notes = document.getElementById('notes').value;
+
+        const start = `${date}T${startTime}`;
+        const end = `${date}T${endTime}`;
+
+        calendar.addEvent({
+          title: `${title}${notes ? ' - ' + notes : ''}`,
+          start: start,
+          end: end,
+          editable: true
+        });
+
+        form.reset();
+        setDefaultDateTime();
+      });
+    });
+  </script>
+
+</body>
+</html>

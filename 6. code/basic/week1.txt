@@ -1,0 +1,26 @@
+"""
+Java:
+
+🕒 Thời lượng: 2 tiếng
+
+Bài tập thực hành:
+
+Viết chương trình tính tổng các số chẵn từ 1 đến 100.
+
+Viết hàm kiểm tra một số có phải số nguyên tố không.
+
+Tạo mảng số nguyên, tính trung bình cộng các phần tử.
+
+Python:
+
+🕒 Thời lượng: 2 tiếng
+
+Bài tập thực hành:
+
+Viết function đảo ngược chuỗi.
+
+Viết function kiểm tra chuỗi có phải palindrome không.
+
+Viết function tính giai thừa bằng vòng lặp.
+
+Viết function tính giai thừa bằng đệ quy."""

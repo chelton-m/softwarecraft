@@ -1,0 +1,244 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Manager Calendar View</title>
+  <!-- <link href="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.8/main.min.css" rel="stylesheet" /> -->
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+
+  <style>
+    body {
+      margin: 0;
+      font-family: sans-serif;
+      height: 100vh;
+      display: flex;
+      flex-direction: column;
+    }
+    .filter-bar {
+      padding: 1rem;
+      border-bottom: 1px solid #ddd;
+      background-color: #f1f1f1;
+    }
+    .main {
+      display: flex;
+      flex-grow: 1;
+    }
+    .sidebar {
+      border-right: 1px solid #ddd;
+      padding: 1rem;
+      background: #f8f9fa;
+    }
+    #calendar {
+      flex-grow: 1;
+      padding: 1rem;
+    }
+    #createTaskForm {
+      width: 300px;
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Staff filter -->
+  <div class="filter-bar">
+    <label for="staffSelect" class="form-label me-2">Select Staff:</label>
+    <select id="staffSelect" class="form-select d-inline-block w-auto">
+      <option value="alice" selected>Alice</option>
+      <option value="bob">Bob</option>
+      <option value="charlie">Charlie</option>
+    </select>
+  </div>
+
+  <!-- Main layout -->
+  <div class="main">
+    <div class="sidebar">
+      <h4>Create Task</h4>
+      <form id="createTaskForm">
+        <div class="mb-3">
+          <label for="newTitle" class="form-label">Title</label>
+          <input type="text" class="form-control" id="newTitle" required>
+        </div>
+        <div class="mb-3">
+          <label for="newNotes" class="form-label">Notes</label>
+          <textarea class="form-control" id="newNotes" rows="2"></textarea>
+        </div>
+        <div class="mb-3">
+          <label for="newStartTime" class="form-label">Start Time</label>
+          <input type="datetime-local" class="form-control" id="newStartTime" required>
+        </div>
+        <div class="mb-3">
+          <label for="newEndTime" class="form-label">End Time</label>
+          <input type="datetime-local" class="form-control" id="newEndTime" required>
+        </div>
+
+        <button type="submit" class="btn btn-primary w-100">Create Task</button>
+      </form>
+    </div>
+
+    <div id="calendar"></div>
+  </div>
+
+  <!-- Event Modal -->
+  <div class="modal fade" id="eventModal" tabindex="-1">
+    <div class="modal-dialog">
+      <form id="eventForm" class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title">Event Details</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+        </div>
+        <div class="modal-body">
+          <input type="hidden" id="eventId">
+          <div class="mb-3">
+            <label for="eventTitle">Title</label>
+            <input type="text" class="form-control" id="eventTitle" required>
+          </div>
+          <div class="mb-3">
+            <label for="eventNotes">Notes</label>
+            <textarea class="form-control" id="eventNotes" rows="2"></textarea>
+          </div>
+          <div class="mb-3">
+            <label for="eventStartTime">Start Time</label>
+            <input type="datetime-local" class="form-control" id="eventStartTime" required>
+          </div>
+          <div class="mb-3">
+            <label for="eventEndTime">End Time</label>
+            <input type="datetime-local" class="form-control" id="eventEndTime" required>
+          </div>
+
+        </div>
+        <div class="modal-footer">
+          <button type="button" id="deleteBtn" class="btn btn-danger">Delete</button>
+          <button type="submit" class="btn btn-primary">Save</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Scripts -->
+  <script src="https://cdn.jsdelivr.net/npm/@fullcalendar/core@6.1.17/locales-all.global.min.js"></script>
+
+  <script src="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.8/index.global.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+  <script>
+    document.addEventListener('DOMContentLoaded', function () {
+      const calendarEl = document.getElementById('calendar');
+      const staffSelect = document.getElementById('staffSelect');
+
+      const staffEvents = {
+        alice: [],
+        bob: [],
+        charlie: []
+      };
+
+      let selectedStaff = 'alice';
+
+      const calendar = new FullCalendar.Calendar(calendarEl, {
+        locale: 'ja',
+        initialView: 'timeGridWeek',
+        editable: true,
+        selectable: true,
+        height: 'auto',
+        headerToolbar: {
+          left: 'prev,next today',
+          center: 'title',
+          right: 'dayGridMonth,timeGridWeek,timeGridDay'
+        },
+        events: staffEvents[selectedStaff],
+        dateClick: function(info) {
+          openModal({ id: '', title: '', start: info.dateStr, end: '', notes: '' });
+        },
+        eventClick: function(info) {
+          info.jsEvent.preventDefault();
+          openModal({
+            id: info.event.id,
+            title: info.event.title.split(' - ')[0],
+            start: info.event.startStr,
+            end: info.event.endStr,
+            notes: info.event.title.split(' - ')[1] || ''
+          });
+        }
+      });
+
+      calendar.render();
+
+      staffSelect.addEventListener('change', function () {
+        selectedStaff = staffSelect.value;
+        calendar.removeAllEvents();
+        calendar.addEventSource(staffEvents[selectedStaff]);
+      });
+
+      // Create task form
+      document.getElementById('createTaskForm').addEventListener('submit', function(e) {
+        e.preventDefault();
+        const title = document.getElementById('newTitle').value;
+        const startTime = document.getElementById('newStartD').value;
+        const endTime = document.getElementById('newEndTime').value;
+        const notes = document.getElementById('newNotes').value;
+        const start = `${startTime}`;
+        const end = `${endTime}`;
+        const event = {
+          id: String(Date.now()),
+          title: `${title}${notes ? ' - ' + notes : ''}`,
+          start: start,
+          end: end
+        };
+        staffEvents[selectedStaff].push(event);
+        calendar.addEvent(event);
+        e.target.reset();
+      });
+
+      // Modal form
+      const eventModal = new bootstrap.Modal(document.getElementById('eventModal'));
+      const eventForm = document.getElementById('eventForm');
+      const deleteBtn = document.getElementById('deleteBtn');
+
+      function openModal(data) {
+        document.getElementById('eventId').value = data.id;
+        document.getElementById('eventTitle').value = data.title;
+        document.getElementById('eventStartTime').value = data.start?.split('T')[1]?.slice(0, 5) || '';
+        document.getElementById('eventEndTime').value = data.end?.split('T')[1]?.slice(0, 5) || '';
+        document.getElementById('eventNotes').value = data.notes || '';
+        deleteBtn.style.display = data.id ? 'inline-block' : 'none';
+        eventModal.show();
+      }
+
+      eventForm.addEventListener('submit', function(e) {
+        e.preventDefault();
+        const id = document.getElementById('eventId').value;
+        const title = document.getElementById('eventTitle').value;
+        const startTime = document.getElementById('eventStartTime').value;
+        const endTime = document.getElementById('eventEndTime').value;
+        const notes = document.getElementById('eventNotes').value;
+        const start = `${startTime}`;
+        const end = `${endTime}`;
+        if (id) {
+          const event = calendar.getEventById(id);
+          event.setProp('title', `${title}${notes ? ' - ' + notes : ''}`);
+          event.setStart(start);
+          event.setEnd(end);
+        } else {
+          const newEvent = {
+            id: String(Date.now()),
+            title: `${title}${notes ? ' - ' + notes : ''}`,
+            start: start,
+            end: end
+          };
+          staffEvents[selectedStaff].push(newEvent);
+          calendar.addEvent(newEvent);
+        }
+        eventModal.hide();
+      });
+
+      deleteBtn.addEventListener('click', function () {
+        const id = document.getElementById('eventId').value;
+        if (id) {
+          const event = calendar.getEventById(id);
+          event.remove();
+          staffEvents[selectedStaff] = staffEvents[selectedStaff].filter(e => e.id !== id);
+        }
+        eventModal.hide();
+      });
+    });
+  </script>
+</body>
+</html>

@@ -1,0 +1,262 @@
+.App {
+  text-align: center;
+  min-height: 100vh;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
+}
+
+.App-header {
+  padding: 2rem;
+  background: rgba(255, 255, 255, 0.1);
+  backdrop-filter: blur(10px);
+  margin-bottom: 2rem;
+}
+
+.App-header h1 {
+  margin: 0;
+  font-size: 2.5rem;
+  font-weight: 700;
+  text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.3);
+}
+
+.App-header p {
+  margin: 0.5rem 0 0 0;
+  font-size: 1.1rem;
+  opacity: 0.9;
+}
+
+.App-main {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 0 2rem;
+}
+
+.form-section {
+  background: rgba(255, 255, 255, 0.1);
+  backdrop-filter: blur(10px);
+  border-radius: 15px;
+  padding: 2rem;
+  margin-bottom: 2rem;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+}
+
+.form-section h2 {
+  margin: 0 0 1.5rem 0;
+  font-size: 1.5rem;
+}
+
+.form-group {
+  margin-bottom: 1rem;
+}
+
+.form-group input {
+  width: 100%;
+  padding: 12px 16px;
+  border: none;
+  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.9);
+  color: #333;
+  font-size: 1rem;
+  transition: all 0.3s ease;
+}
+
+.form-group input:focus {
+  outline: none;
+  background: white;
+  box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.3);
+}
+
+.form-actions {
+  display: flex;
+  gap: 1rem;
+  justify-content: center;
+  margin-top: 1.5rem;
+}
+
+.form-actions button {
+  padding: 12px 24px;
+  border: none;
+  border-radius: 8px;
+  font-size: 1rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.form-actions button[type="submit"] {
+  background: #4CAF50;
+  color: white;
+}
+
+.form-actions button[type="submit"]:hover:not(:disabled) {
+  background: #45a049;
+  transform: translateY(-2px);
+}
+
+.cancel-btn {
+  background: #f44336 !important;
+  color: white;
+}
+
+.cancel-btn:hover:not(:disabled) {
+  background: #da190b !important;
+  transform: translateY(-2px);
+}
+
+.form-actions button:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+  transform: none !important;
+}
+
+.users-section {
+  background: rgba(255, 255, 255, 0.1);
+  backdrop-filter: blur(10px);
+  border-radius: 15px;
+  padding: 2rem;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+}
+
+.users-section h2 {
+  margin: 0 0 1.5rem 0;
+  font-size: 1.5rem;
+}
+
+.loading {
+  font-style: italic;
+  opacity: 0.8;
+}
+
+.users-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+  gap: 1.5rem;
+  margin-top: 1.5rem;
+}
+
+.user-card {
+  background: rgba(255, 255, 255, 0.15);
+  border-radius: 12px;
+  padding: 1.5rem;
+  transition: all 0.3s ease;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+}
+
+.user-card:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.2);
+}
+
+.user-info h3 {
+  margin: 0 0 0.5rem 0;
+  font-size: 1.3rem;
+  color: #fff;
+}
+
+.user-info p {
+  margin: 0 0 0.5rem 0;
+  opacity: 0.9;
+}
+
+.user-info small {
+  opacity: 0.7;
+  font-size: 0.85rem;
+}
+
+.user-actions {
+  display: flex;
+  gap: 0.5rem;
+  margin-top: 1rem;
+}
+
+.edit-btn, .delete-btn {
+  flex: 1;
+  padding: 8px 16px;
+  border: none;
+  border-radius: 6px;
+  font-size: 0.9rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.edit-btn {
+  background: #2196F3;
+  color: white;
+}
+
+.edit-btn:hover:not(:disabled) {
+  background: #1976D2;
+}
+
+.delete-btn {
+  background: #f44336;
+  color: white;
+}
+
+.delete-btn:hover:not(:disabled) {
+  background: #d32f2f;
+}
+
+.edit-btn:disabled, .delete-btn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.no-users {
+  text-align: center;
+  font-style: italic;
+  opacity: 0.8;
+  margin-top: 2rem;
+}
+
+.App-footer {
+  margin-top: 3rem;
+  padding: 2rem;
+  background: rgba(0, 0, 0, 0.2);
+}
+
+.App-footer p {
+  margin: 0 0 1rem 0;
+  font-weight: 600;
+}
+
+.App-footer ul {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 1rem;
+}
+
+.App-footer li {
+  background: rgba(255, 255, 255, 0.1);
+  padding: 0.5rem 1rem;
+  border-radius: 20px;
+  font-size: 0.9rem;
+}
+
+@media (max-width: 768px) {
+  .App-header h1 {
+    font-size: 2rem;
+  }
+  
+  .App-main {
+    padding: 0 1rem;
+  }
+  
+  .users-grid {
+    grid-template-columns: 1fr;
+  }
+  
+  .form-actions {
+    flex-direction: column;
+  }
+  
+  .App-footer ul {
+    flex-direction: column;
+    align-items: center;
+  }
+}

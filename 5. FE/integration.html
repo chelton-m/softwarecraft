@@ -1,0 +1,370 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <!-- Bootstrap CSS -->
+    <link
+      href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css"
+      rel="stylesheet"
+    />
+    <!-- Bootstrap Icons -->
+    <link
+      href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css"
+      rel="stylesheet"
+    />
+
+    <title>Manager Calendar View</title>
+    <script src="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.17/index.global.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@fullcalendar/core@6.1.17/locales-all.global.min.js"></script>
+    <style>
+      body {
+        margin: 0;
+        font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+        background-color: #f0f2f5;
+        color: #333;
+      }
+
+      .main {
+        display: flex;
+        gap: 2rem;
+        margin: 30px;
+        max-width: 1500px;
+
+      }
+
+      .sidebar-card {
+        width: 320px;
+        background-color: #ffffff;
+        border-radius: 1rem;
+        box-shadow: 0 6px 16px rgba(0, 0, 0, 0.07);
+        padding: 1.5rem;
+      }
+
+      .card-title {
+        font-size: 1.25rem;
+        margin-bottom: 1rem;
+        font-weight: 600;
+        color: #1f2937;
+      }
+
+      .filter-bar {
+        margin-bottom: 1.5rem;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        background-color: #f9fafb;
+        padding: 0.75rem 1rem;
+        border-radius: 0.75rem;
+        border: 1px solid #e5e7eb;
+      }
+
+      .filter-bar label {
+        font-weight: 500;
+        margin-right: 0.5rem;
+      }
+
+      #staffSelect {
+        width: 180px;
+        padding: 0.4rem;
+      }
+
+      #calendar {
+        flex-grow: 1;
+        background-color: #ffffff;
+        padding: 1.5rem;
+        border-radius: 1rem;
+        box-shadow: 0 6px 16px rgba(0, 0, 0, 0.07);
+      }
+
+      .modal-content {
+        border-radius: 1rem;
+      }
+
+      .modal-title {
+        font-weight: 600;
+      }
+    </style>
+  </head>
+
+  <body>
+    <input type="time" step="1800">
+
+    <!-- Main layout -->
+    <div class="main">
+      <div class="card sidebar-card">
+        <div class="card-body">
+          <!-- Filter/Header Bar -->
+          <div class="filter-bar">
+            <label for="staffSelect" class="form-label mb-0">👤 Staff:</label>
+            <select id="staffSelect" class="form-select">
+              <option value="alice" selected>Alice</option>
+              <option value="bob">Bob</option>
+              <option value="charlie">Charlie</option>
+            </select>
+          </div>
+          <h5 class="card-title">Create Task</h5>
+          <form id="createTaskForm">
+            <div class="mb-3">
+              <label for="newTitle" class="form-label">Title</label>
+              <input type="text" class="form-control" id="newTitle" required />
+            </div>
+            <div class="mb-3">
+              <label for="newNotes" class="form-label">Notes</label>
+              <textarea class="form-control" id="newNotes" rows="2"></textarea>
+            </div>
+            <div class="mb-3">
+              <label for="newStartTime" class="form-label">Start Time</label>
+              <input
+                type="datetime-local"
+                class="form-control"
+                id="newStartTime"
+                step="1800"
+                required
+              />
+            </div>
+            <div class="mb-3">
+              <label for="newEndTime" class="form-label">End Time</label>
+              <input
+                type="time"
+                class="form-control"
+                id="newEndTime" step="1800"
+                required
+              />
+            </div>
+            <div class="mb-3">
+              <label for="newColor" class="form-label">Color</label>
+              <input
+                type="color"
+                class="form-control form-control-color"
+                id="newColor"
+                value="#3788d8"
+              />
+            </div>
+
+            <button type="submit" class="btn btn-primary w-100">
+              Create Task
+            </button>
+          </form>
+        </div>
+      </div>
+
+      <div id="calendar"></div>
+    </div>
+
+    <!-- Event Modal -->
+    <div class="modal fade" id="eventModal" tabindex="-1">
+      <div class="modal-dialog">
+        <form id="eventForm" class="modal-content">
+          <div class="modal-header">
+            <h5 class="modal-title">Event Details</h5>
+            <button
+              type="button"
+              class="btn-close"
+              data-bs-dismiss="modal"
+            ></button>
+          </div>
+          <div class="modal-body">
+            <input type="hidden" id="eventId" />
+            <div class="mb-3">
+              <label for="eventTitle">Title</label>
+              <input
+                type="text"
+                class="form-control"
+                id="eventTitle"
+                required
+              />
+            </div>
+            <div class="mb-3">
+              <label for="eventNotes">Notes</label>
+              <textarea
+                class="form-control"
+                id="eventNotes"
+                rows="2"
+              ></textarea>
+            </div>
+            <div class="mb-3">
+              <label for="eventStartTime">Start Time</label>
+              <input
+                type="datetime-local"
+                class="form-control"
+                id="eventStartTime"
+                required
+              />
+            </div>
+            <div class="mb-3">
+              <label for="eventEndTime">End Time</label>
+              <input
+                type="datetime-local"
+                class="form-control"
+                id="eventEndTime"
+                required
+              />
+            </div>
+            <div class="mb-3">
+              <label for="eventColor">Color</label>
+              <input
+                type="color"
+                class="form-control form-control-color"
+                id="eventColor"
+                value="#3788d8"
+              />
+            </div>
+          </div>
+          <div class="modal-footer">
+            <button type="button" id="deleteBtn" class="btn btn-danger">
+              Delete
+            </button>
+            <button type="submit" class="btn btn-primary">Save</button>
+          </div>
+        </form>
+      </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+
+    <script>
+      document.addEventListener("DOMContentLoaded", function () {
+        const calendarEl = document.getElementById("calendar");
+        const staffSelect = document.getElementById("staffSelect");
+
+        const staffEvents = {
+          alice: [],
+          bob: [],
+          charlie: [],
+        };
+
+        let selectedStaff = "alice";
+        let currentEvent = null;
+
+        const calendar = new FullCalendar.Calendar(calendarEl, {
+          locale: "ja",
+          initialView: "timeGridDay",
+          editable: true,
+          selectable: true,
+          headerToolbar: {
+            left: "prev,next today",
+            center: "title",
+            right: "dayGridMonth,timeGridWeek,timeGridDay,list",
+          },
+          events: staffEvents[selectedStaff],
+          dateClick: function (info) {
+            openModal({
+              id: "",
+              title: "",
+              start: info.dateStr,
+              end: "",
+              notes: "",
+            });
+          },
+          eventClick: function (info) {
+            info.jsEvent.preventDefault();
+            openModal({
+              id: info.event.id,
+              title: info.event.title.split(" - ")[0],
+              start: info.event.startStr,
+              end: info.event.endStr,
+              notes: info.event.title.split(" - ")[1] || "",
+              color: info.event.backgroundColor,
+            });
+          },
+        });
+
+        calendar.render();
+
+        staffSelect.addEventListener("change", function () {
+          selectedStaff = staffSelect.value;
+          calendar.removeAllEvents();
+          calendar.addEventSource(staffEvents[selectedStaff]);
+        });
+
+        // Create task form
+        document
+          .getElementById("createTaskForm")
+          .addEventListener("submit", function (e) {
+            e.preventDefault();
+            const title = document.getElementById("newTitle").value;
+            const startTime = document.getElementById("newStartTime").value;
+            const endTime = document.getElementById("newEndTime").value;
+            const notes = document.getElementById("newNotes").value;
+            const color = document.getElementById("newColor").value;
+
+            const event = {
+              id: String(Date.now()),
+              title: `${title} - ${notes}`,
+              start: startTime,
+              end: endTime,
+              backgroundColor: color,
+              borderColor: color,
+            };
+
+            staffEvents[selectedStaff].push(event);
+            calendar.addEvent(event);
+            e.target.reset();
+          });
+
+        // Event Modal
+        const eventModal = new bootstrap.Modal(
+          document.getElementById("eventModal")
+        );
+
+        function openModal(eventData) {
+          document.getElementById("eventId").value = eventData.id || "";
+          document.getElementById("eventTitle").value = eventData.title || "";
+          document.getElementById("eventNotes").value = eventData.notes || "";
+          document.getElementById("eventStartTime").value =
+            eventData.start || "";
+          document.getElementById("eventEndTime").value = eventData.end || "";
+          document.getElementById("eventColor").value =
+            eventData.color || "#3788d8";
+          eventModal.show();
+        }
+
+        document
+          .getElementById("eventForm")
+          .addEventListener("submit", function (e) {
+            e.preventDefault();
+            const id = document.getElementById("eventId").value;
+            const title = document.getElementById("eventTitle").value;
+            const notes = document.getElementById("eventNotes").value;
+            const start = document.getElementById("eventStartTime").value;
+            const end = document.getElementById("eventEndTime").value;
+            const color = document.getElementById("eventColor").value;
+
+            const updatedEvent = {
+              id,
+              title: `${title} - ${notes}`,
+              start,
+              end,
+              backgroundColor: color,
+              borderColor: color,
+            };
+
+            const index = staffEvents[selectedStaff].findIndex(
+              (e) => e.id === id
+            );
+            if (index !== -1) {
+              staffEvents[selectedStaff][index] = updatedEvent;
+              calendar.getEventById(id)?.remove();
+              calendar.addEvent(updatedEvent);
+            }
+
+            eventModal.hide();
+          });
+
+        document
+          .getElementById("deleteBtn")
+          .addEventListener("click", function () {
+            const id = document.getElementById("eventId").value;
+            const index = staffEvents[selectedStaff].findIndex(
+              (e) => e.id === id
+            );
+            if (index !== -1) {
+              staffEvents[selectedStaff].splice(index, 1);
+              calendar.getEventById(id)?.remove();
+            }
+            eventModal.hide();
+          });
+      });
+    </script>
+  </body>
+</html>

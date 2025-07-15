@@ -1,0 +1,106 @@
+*** General Formulas Calculation
+0. Remaininig Day 1stcal: remaininig_day_1stcal = (target_day - day_with_created_target).days()
+1. Daily Progress Percentage: daily_progress = (actual_result/daily_target)*100
+2. Total Effort Completion: total_progress = (actual_result/total_target)*100
+3. Recal the daily_target if change daily_progress and keep the time: daily_target_recal = (total_target-daily_target*)/(target_day - day_with_change)
+4. Recal the remaining_day if change daily_progress and keep the old_daily_target: remaining_day_recal = (total_target/old_daily_target)*365
+
+*** Example Defined Target
+
+1. Reading Target
+Goal: Read 40 books in 365 days(Average 200 pages/book)
+
+Daily Target: Read 30 pages/day
+
+Actual Result: Reading 10 pages/day currently
+
+Adjusted Plan:
+
+Effort: 1/3 of the target effort, achieving 1% of the goal each day
+
+Impact on Schedule: Recalculate to 35 pages/day or adjust the timeline to 2 years to finish 40 books
+
+Remaining days: 364
+
+2. Full Commit History in GitHub
+Goal: 1 commit/day for a year
+
+Recommendation:
+
+Plan small, daily tasks or features to commit each day.
+
+Use project management tools to break down tasks into daily commits.
+
+3. Weight Loss
+Goal: Lose weight
+
+Daily Routine:
+
+Run: 3 km/day
+
+Workout: 30 minutes/day
+
+Recommendation:
+
+Track your runs and workouts using a fitness app to stay accountable.
+
+Mix in different types of workouts to keep it interesting and prevent burnout.
+
+4. Language Learning
+Goal: Learn a new language
+
+Recommendation:
+
+Daily Practice: 20-30 minutes/day using apps like Duolingo or Babbel.
+
+Supplement: Weekly sessions with a language tutor or language exchange partner.
+
+5. Higher Scores
+Goal: Improve scores in a specific subject
+
+Recommendation:
+
+Daily Study: Dedicate a specific amount of time each day to studying the subject.
+
+Practice Tests: Regularly take practice tests to track progress and identify areas for improvement.
+
+6. Watching Educational Videos
+Goal: Gain knowledge through educational videos
+
+Recommendation:
+
+Daily Viewing: Watch 1 educational video/day (around 20-30 minutes).
+
+Track Progress: Maintain a list of videos watched and notes on key learnings.
+
+7. Journaling
+Goal: Maintain a daily journal
+
+Recommendation:
+
+Daily Entry: Spend 10-15 minutes each day writing in your journal.
+
+Topics: Reflect on daily experiences, goals, and thoughts to develop a habit.
+
+
+Combine all activities (3) Recommend 3 main activities as it will affect 1 day if we dont finish it except working time, please finish at least 1 and maximum 3
+
+To calculate progress and adjust targets dynamically based on actual performance, we'll use formulas for:
+
+Daily Target Progress: How much of the daily goal was achieved.
+Effort Impact on Total Target: How the real-life effort affects the total goal and the remaining time.
+Adjusted Daily Target: A recalculated daily target to stay on track if the performance lags.
+
+Features:
+1. Calculate the targets change -> Prediction for many changes
+2. 
+
+
+First Time: Username, new target, following activities
+Track history change
+enter the target 
+
+
+Next Time 
+- Keep the session
+- Target of the input should be calculate to number for easy calculation. Input the number of the activities change in a day

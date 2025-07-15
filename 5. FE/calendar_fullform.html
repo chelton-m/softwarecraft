@@ -1,0 +1,222 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Task Scheduler</title>
+  <!-- FullCalendar CSS -->
+  <link href="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.8/main.min.css" rel="stylesheet" />
+  <!-- Bootstrap CSS for Modal -->
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+  <style>
+    body {
+      margin: 0;
+      font-family: sans-serif;
+      height: 100vh;
+      display: flex;
+    }
+    .sidebar {
+      /* width: 500px; */
+      border-right: 1px solid #ddd;
+      padding: 1rem;
+      background: #f8f9fa;
+    }
+    #createTaskForm {
+        width: 300px;
+    }
+    #calendar {
+      flex-grow: 1;
+      padding: 1rem;
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Left sidebar form -->
+  <div class="sidebar">
+    <h4>Create Task</h4>
+    <form id="createTaskForm">
+      <div class="mb-3">
+        <label for="newTitle" class="form-label">Title</label>
+        <input type="text" class="form-control" id="newTitle" required>
+      </div>
+      <div class="mb-3">
+        <label for="newDate" class="form-label">Date</label>
+        <input type="date" class="form-control" id="newDate" required>
+      </div>
+      <div class="mb-3">
+        <label for="newStartTime" class="form-label">Start Time</label>
+        <input type="time" class="form-control" id="newStartTime" required>
+      </div>
+      <div class="mb-3">
+        <label for="newEndTime" class="form-label">End Time</label>
+        <input type="time" class="form-control" id="newEndTime" required>
+      </div>
+      <div class="mb-3">
+        <label for="newNotes" class="form-label">Notes</label>
+        <textarea class="form-control" id="newNotes" rows="2"></textarea>
+      </div>
+      <button type="submit" class="btn btn-primary w-100">Create Task</button>
+    </form>
+  </div>
+
+  <!-- Calendar -->
+  <div id="calendar"></div>
+
+  <!-- Modal for viewing/editing task -->
+  <div class="modal fade" id="eventModal" tabindex="-1" aria-labelledby="eventModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+      <form id="eventForm" class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title" id="eventModalLabel">Event Details</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+        </div>
+        <div class="modal-body">
+          <input type="hidden" id="eventId">
+          <div class="mb-3">
+            <label for="eventTitle" class="form-label">Title</label>
+            <input type="text" class="form-control" id="eventTitle" required>
+          </div>
+          <div class="mb-3">
+            <label for="eventDate" class="form-label">Date</label>
+            <input type="date" class="form-control" id="eventDate" required>
+          </div>
+          <div class="mb-3">
+            <label for="eventStartTime" class="form-label">Start Time</label>
+            <input type="time" class="form-control" id="eventStartTime" required>
+          </div>
+          <div class="mb-3">
+            <label for="eventEndTime" class="form-label">End Time</label>
+            <input type="time" class="form-control" id="eventEndTime" required>
+          </div>
+          <div class="mb-3">
+            <label for="eventNotes" class="form-label">Notes</label>
+            <textarea class="form-control" id="eventNotes" rows="2"></textarea>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" id="deleteBtn" class="btn btn-danger">Delete</button>
+          <button type="submit" class="btn btn-primary">Save</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Scripts -->
+  <script src="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.8/index.global.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+
+  <script>
+    document.addEventListener('DOMContentLoaded', function () {
+      const calendarEl = document.getElementById('calendar');
+      const calendar = new FullCalendar.Calendar(calendarEl, {
+        initialView: 'dayGridMonth',
+        editable: true,
+        selectable: true,
+        // height: 'auto',
+        dayMaxEvents: true,
+        contentHeight: 600,
+        headerToolbar: {
+          left: 'prev,next today',
+          center: 'title',
+          right: 'dayGridMonth,timeGridWeek,timeGridDay'
+        },
+        events: [],
+        dateClick: function(info) {
+          openModal({
+            id: '',
+            title: '',
+            start: info.dateStr,
+            end: '',
+            notes: ''
+          });
+        },
+        eventClick: function(info) {
+          info.jsEvent.preventDefault();
+          openModal({
+            id: info.event.id,
+            title: info.event.title.split(' - ')[0],
+            start: info.event.startStr,
+            end: info.event.endStr,
+            notes: info.event.title.split(' - ')[1] || ''
+          });
+        }
+      });
+      calendar.render();
+
+      // Modal logic
+      const eventModal = new bootstrap.Modal(document.getElementById('eventModal'));
+      const eventForm = document.getElementById('eventForm');
+      const deleteBtn = document.getElementById('deleteBtn');
+
+      function openModal(eventData) {
+        document.getElementById('eventId').value = eventData.id;
+        document.getElementById('eventTitle').value = eventData.title;
+        document.getElementById('eventDate').value = eventData.start ? eventData.start.split('T')[0] : '';
+        document.getElementById('eventStartTime').value = eventData.start ? eventData.start.split('T')[1]?.slice(0,5) : '';
+        document.getElementById('eventEndTime').value = eventData.end ? eventData.end.split('T')[1]?.slice(0,5) : '';
+        document.getElementById('eventNotes').value = eventData.notes;
+        deleteBtn.style.display = eventData.id ? 'inline-block' : 'none';
+        eventModal.show();
+      }
+
+      eventForm.addEventListener('submit', function(e) {
+        e.preventDefault();
+        const id = document.getElementById('eventId').value;
+        const title = document.getElementById('eventTitle').value;
+        const date = document.getElementById('eventDate').value;
+        const startTime = document.getElementById('eventStartTime').value;
+        const endTime = document.getElementById('eventEndTime').value;
+        const notes = document.getElementById('eventNotes').value;
+        const start = `${date}T${startTime}`;
+        const end = `${date}T${endTime}`;
+        if (id) {
+          const event = calendar.getEventById(id);
+          event.setProp('title', `${title}${notes ? ' - ' + notes : ''}`);
+          event.setStart(start);
+          event.setEnd(end);
+        } else {
+          calendar.addEvent({
+            id: String(Date.now()),
+            title: `${title}${notes ? ' - ' + notes : ''}`,
+            start: start,
+            end: end,
+            editable: true
+          });
+        }
+        eventModal.hide();
+      });
+
+      deleteBtn.addEventListener('click', function() {
+        const id = document.getElementById('eventId').value;
+        if (id) {
+          const event = calendar.getEventById(id);
+          event.remove();
+        }
+        eventModal.hide();
+      });
+
+      // Left sidebar form logic
+      document.getElementById('createTaskForm').addEventListener('submit', function(e) {
+        e.preventDefault();
+        const title = document.getElementById('newTitle').value;
+        const date = document.getElementById('newDate').value;
+        const startTime = document.getElementById('newStartTime').value;
+        const endTime = document.getElementById('newEndTime').value;
+        const notes = document.getElementById('newNotes').value;
+        const start = `${date}T${startTime}`;
+        const end = `${date}T${endTime}`;
+        calendar.addEvent({
+          id: String(Date.now()),
+          title: `${title}${notes ? ' - ' + notes : ''}`,
+          start: start,
+          end: end,
+          editable: true
+        });
+
+        // Reset form
+        e.target.reset();
+      });
+    });
+  </script>
+</body>
+</html>
