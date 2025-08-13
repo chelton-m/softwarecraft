@@ -1,0 +1,291 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Sales Plan Calendar</title>
+  <style>
+    body {
+      font-family: sans-serif;
+      padding: 20px;
+      background: #f9f9f9;
+    }
+
+    h2 {
+      margin-bottom: 10px;
+    }
+
+    .buttons {
+      margin-bottom: 20px;
+    }
+
+    .buttons button {
+      margin-right: 10px;
+      padding: 6px 12px;
+      border: none;
+      background: #007bff;
+      color: white;
+      border-radius: 4px;
+      cursor: pointer;
+    }
+
+    .calendar-container {
+      display: grid;
+      grid-template-columns: repeat(7, 1fr);
+      gap: 12px;
+    }
+
+    .day-labels {
+      display: grid;
+      grid-template-columns: repeat(7, 1fr);
+      margin-bottom: 10px;
+      text-align: center;
+    }
+
+    .day-labels .label {
+      font-weight: bold;
+      font-size: 14px;
+    }
+
+    .date-number {
+      font-size: 12px;
+      color: #555;
+    }
+
+    .day-block {
+      background: white;
+      border: 1px solid #ccc;
+      border-radius: 8px;
+      padding: 10px;
+      max-height: 320px;
+      overflow-y: auto;
+    }
+
+    .day-title {
+      font-weight: bold;
+      font-size: 14px;
+      margin-bottom: 8px;
+    }
+
+    .plan {
+      border-top: 1px solid #eee;
+      padding-top: 6px;
+      margin-top: 6px;
+      font-size: 13px;
+    }
+
+    .priority {
+      font-weight: bold;
+      font-size: 13px;
+    }
+
+    .priority.low { color: #3b82f6; }
+    .priority.medium { color: #f59e0b; }
+    .priority.high { color: #ef4444; }
+
+    .label {
+      color: #666;
+      font-size: 12px;
+      margin-left: 6px;
+    }
+  </style>
+</head>
+<body>
+
+  <h2>Sales Plan View</h2>
+  <div class="buttons">
+    <button onclick="switchTo7Day()">7-Day View</button>
+    <button onclick="switchTo30Day()">30-Day View</button>
+    <button id="next7" style="display:none;" onclick="next7Days()">Next 7 Days</button>
+  </div>
+
+  <div id="day-labels" class="day-labels"></div>
+  <div id="calendar" class="calendar-container"></div>
+
+  <script>
+    const plans = [
+      {
+        id: 1,
+        date: "2025-05-20",
+        title: "Visit ABC Corp",
+        customerName: "ABC Corp",
+        purpose: "Product Demo",
+        priority: "high",
+        hasAppointment: true,
+        meetingTime: "10:00 AM"
+      },
+      {
+        id: 2,
+        date: "2025-05-21",
+        title: "Follow-up Call",
+        customerName: "XYZ Inc",
+        purpose: "Status Check",
+        priority: "medium",
+        hasAppointment: false,
+      },
+      {
+        id: 3,
+        date: "2025-05-20",
+        title: "Site Inspection",
+        customerName: "DEF Ltd",
+        purpose: "Pre-sale Check",
+        priority: "low",
+        hasAppointment: true,
+        meetingTime: "2:00 PM"
+      },
+      {
+        id: 4,
+        date: "2025-05-20",
+        title: "Lunch with Client",
+        customerName: "Zeta Co.",
+        purpose: "Relationship Building",
+        priority: "medium",
+        hasAppointment: true,
+        meetingTime: "12:30 PM"
+      },
+      {
+        id: 5,
+        date: "2025-05-20",
+        title: "Demo Setup",
+        customerName: "Tech Inc.",
+        purpose: "Technical Setup",
+        priority: "low"
+      },
+      {
+        id: 6,
+        date: "2025-05-20",
+        title: "Post-Meeting Follow-up",
+        customerName: "ABC Corp",
+        purpose: "Feedback Collection",
+        priority: "high"
+      }
+    ];
+
+    let currentOffset = 0;
+
+    function formatDate(dateObj) {
+      return dateObj.toLocaleDateString("en-US", {
+        weekday: "short",
+        month: "short",
+        day: "numeric"
+      });
+    }
+
+    function switchTo7Day() {
+      currentOffset = 0;
+      document.getElementById("next7").style.display = "inline-block";
+      renderCalendar(7, currentOffset, true);
+    }
+
+    function switchTo30Day() {
+      document.getElementById("next7").style.display = "none";
+      document.getElementById("day-labels").innerHTML = "";
+      renderCalendar(30, 0, false);
+    }
+
+    function next7Days() {
+      currentOffset += 7;
+      renderCalendar(7, currentOffset, true);
+    }
+
+   function renderCalendar(daysToShow, offset = 0, is7Day = false) {
+  const container = document.getElementById("calendar");
+  const labelContainer = document.getElementById("day-labels");
+
+  container.innerHTML = "";
+  labelContainer.innerHTML = "";
+
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+
+  for (let i = 0; i < daysToShow; i++) {
+    const dayDate = new Date(today);
+    dayDate.setDate(today.getDate() + i + offset);
+    const dateStr = dayDate.toISOString().split("T")[0];
+    const dailyPlans = plans.filter(p => p.date === dateStr);
+
+    if (is7Day) {
+      const dayLabel = document.createElement("div");
+      dayLabel.className = "label";
+      dayLabel.innerHTML = `
+        ${dayDate.toLocaleDateString("en-US", { weekday: "short" })}<br>
+        <span class="date-number">${dayDate.getDate()}</span>
+      `;
+      labelContainer.appendChild(dayLabel);
+    }
+
+    const block = document.createElement("div");
+    block.className = "day-block";
+
+    if (!is7Day) {
+      const title = document.createElement("div");
+      title.className = "day-title";
+      title.textContent = formatDate(dayDate);
+      block.appendChild(title);
+
+      if (dailyPlans.length > 0) {
+        const btn = document.createElement("button");
+        btn.textContent = "View Plans";
+        btn.style.padding = "4px 8px";
+        btn.style.marginTop = "6px";
+        btn.style.fontSize = "12px";
+        btn.style.cursor = "pointer";
+        btn.onclick = () => {
+          const details = dailyPlans.map(plan =>
+            `• ${plan.title}\nCustomer: ${plan.customerName}\nPurpose: ${plan.purpose}\n${plan.hasAppointment ? "Time: " + plan.meetingTime : ""}`
+          ).join("\n\n");
+          alert(`Plans for ${formatDate(dayDate)}:\n\n${details}`);
+        };
+        block.appendChild(btn);
+      } else {
+        const noPlan = document.createElement("div");
+        noPlan.textContent = "No plans";
+        noPlan.style.fontSize = "12px";
+        noPlan.style.color = "#aaa";
+        block.appendChild(noPlan);
+      }
+
+    } else {
+      if (dailyPlans.length === 0) {
+        const noPlan = document.createElement("div");
+        noPlan.textContent = "No plans";
+        noPlan.style.color = "#888";
+        noPlan.style.fontSize = "13px";
+        block.appendChild(noPlan);
+      } else {
+        dailyPlans.slice(0, 5).forEach(plan => {
+          const planDiv = document.createElement("div");
+          planDiv.className = "plan";
+
+          planDiv.innerHTML = `
+            <div class="priority ${plan.priority}">• ${plan.title}</div>
+            ${plan.customerName ? `<div class="label">Customer: ${plan.customerName}</div>` : ""}
+            ${plan.purpose ? `<div class="label">Purpose: ${plan.purpose}</div>` : ""}
+            ${plan.hasAppointment && plan.meetingTime ? `<div class="label">Time: ${plan.meetingTime}</div>` : ""}
+          `;
+          block.appendChild(planDiv);
+        });
+      }
+    }
+
+    container.appendChild(block);
+  }
+}
+
+
+    // Initial load
+    switchTo30Day();
+
+    // Make function globally accessible
+    window.renderCalendar = renderCalendar;
+    window.switchTo7Day = switchTo7Day;
+    window.switchTo30Day = switchTo30Day;
+    window.next7Days = next7Days;
+  </script>
+</body>
+</html>
+
+<!-- This HTML file is a simple calendar view for a sales plan. It allows users to switch between a 7-day and a 30-day view, and displays plans for each day with details like customer name, purpose, and priority. The calendar is interactive, allowing users to view plans for specific days. -->
+<!-- The JavaScript code handles the rendering of the calendar, filtering plans by date, and managing the view state. The CSS styles the calendar layout and elements for a clean and user-friendly interface. -->
+<!-- The calendar is designed to be responsive and visually appealing, with clear distinctions between different priorities and statuses of plans. -->
+<!-- The code is self-contained and does not rely on any external libraries or frameworks, making it lightweight and efficient. -->
+<!-- Test in sandbox:  https://jsfiddle.net/  -->
